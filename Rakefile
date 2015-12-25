@@ -1,6 +1,8 @@
 require_relative 'lib/resources'
 require 'tmpdir'
 
+Dir.glob('tasks/**/*.rake').each { |r| load r }
+
 task :default => [:test]
 
 desc 'Builds the site'
@@ -19,7 +21,17 @@ task :build do
 end
 
 desc "Test the output"
-task :test => [:remove_tmp_dir, :remove_output_dir, :build, :run_proofer]
+task :test => [:remove_tmp_dir, :remove_output_dir, :build] do
+  Rake::Task['spec'].invoke
+  Rake::Task['run_proofer'].invoke
+end
+
+desc "Run Rspec"
+task :spec do
+  require 'rspec/core/rake_task'
+  RSpec::Core::RakeTask.new(:rspec)
+  Rake::Task['rspec'].invoke
+end
 
 desc "Run the HTML-Proofer"
 task :run_proofer do
@@ -28,8 +40,8 @@ task :run_proofer do
   latest_ent_version = GitHub::Resources::Helpers::CONTENT['LATEST_ENTERPRISE_VERSION']
   # swap versionless Enterprise articles with versioned paths
   href_swap = {
-    %r{help\.github\.com/enterprise/admin/} => "help.github.com/enterprise/#{latest_ent_version}/admin/",
-    %r{help\.github\.com/enterprise/user/} => "help.github.com/enterprise/#{latest_ent_version}/user/"
+    %r{help\.github\.com/enterprise/admin/} => "help.github.com/enterprise/#{config[:versions][0]}/admin/",
+    %r{help\.github\.com/enterprise/user/} => "help.github.com/enterprise/#{config[:versions][0]}/user/"
   }
   HTML::Proofer.new("./output", :href_ignore => ignored_links, :href_swap => href_swap).run
 end
@@ -57,6 +69,7 @@ def commit_message(no_commit_msg = false)
   end
 
   mesg = default_message if mesg.nil? || mesg == ''
+  mesg << "\nGenerated from #{ENV['BUILD_SHA']}" if ENV['BUILD_SHA']
   mesg.gsub(/'/, '') # Allow this to be handed off via -m '#{message}'
 end
 

@@ -1,10 +1,9 @@
 ---
-title: Repositories | GitHub API
+title: Repositories
 ---
 
 # Repositories
 
-* TOC
 {:toc}
 
 ## List your repositories
@@ -68,7 +67,7 @@ Note: Pagination is powered exclusively by the `since` parameter.
 Use the [Link header](/v3/#link-header) to get the URL for the next page of
 repositories.
 
-{{#enterprise-only}}
+{% if page.version != 'dotcom' and page.version >= 2.3 %}
 
 If you are an [authenticated](/v3/#authentication) site administrator for your Enterprise instance,
 you will be able to list all repositories including private repositories.
@@ -79,7 +78,7 @@ Name | Type | Description
 -----|------|--------------
 `visibility`|`string`| To include private repositories as well set to `all`. Default: `public`
 
-{{/enterprise-only}}
+{% endif %}
 
     GET /repositories
 
@@ -291,7 +290,7 @@ Name | Type | Description
 {{#tip}}
 
   <a name="preview-period"></a>
-  
+
   The Protected Branch API is currently available for developers to preview.
   During the preview period, the API may change without advance notice.
   Please see the [blog post](/changes/2015-11-11-protected-branches-api) for full details.

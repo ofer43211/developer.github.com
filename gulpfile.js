@@ -36,15 +36,25 @@ gulp.task("css", function() {
 gulp.task("javascript", function () {
   gulp.src("assets/javascripts/dev_mode.js")
     .pipe(gulp.dest("output/assets/javascripts/"));
-  gulp.src("assets/search-index.json")
-    .pipe(gulp.dest("output/assets/"));
   return gulp.src([
+    "assets/javascripts/initial.js",
     "assets/javascripts/documentation.js",
+    "assets/javascripts/search.js",
+    "assets/javascripts/images.js",
     "assets/vendor/retinajs/src/retinajs"
     ])
     .pipe(gulpif(transformCS, coffee()))
     .pipe(concat("application.js"))
+    .pipe(replace(/\{\{ site\.version \}\}/g, CONFIG.latest_enterprise_version))
     .pipe(gulpif(IS_PRODUCTION, uglify()))
+    .pipe(gulp.dest("output/assets/javascripts"));
+});
+
+gulp.task("javascript_workers", function () {
+  return gulp.src([
+    "assets/javascripts/search_worker.js",
+    "assets/vendor/lunr.js/lunr.min.js"
+    ])
     .pipe(gulp.dest("output/assets/javascripts"));
 });
 
@@ -70,7 +80,8 @@ gulp.task("server", function() {
   connect = require("gulp-connect");
   connect.server({
     port: 4000,
-    root: ["output"]
+    root: ["output"],
+    fallback: "output/404.html"
   });
 });
 
@@ -91,6 +102,6 @@ gulp.task("watch:assets", function() {
 });
 
 gulp.task("serve", [ "server", "watch:nanoc", "watch:assets" ]);
-gulp.task("assets", [ "css", "javascript", "octicons", "images" ]);
+gulp.task("assets", [ "css", "javascript", "javascript_workers", "octicons", "images" ]);
 gulp.task("build", [ "nanoc:compile", "assets" ]);
 gulp.task("default", [ "build", "serve" ]);
